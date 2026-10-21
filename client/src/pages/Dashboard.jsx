@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API_URL from "../api";
 
-
-
 function formatCurrency(amount) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -44,6 +42,7 @@ function Dashboard() {
         setLoading(true);
         setError("");
 
+        // 1. Load the authenticated user.
         const userResponse = await fetch(`${API_URL}/api/auth/me`, {
           credentials: "include",
           signal: controller.signal,
@@ -66,6 +65,7 @@ function Dashboard() {
 
         setUser(userData.user || userData);
 
+        // 2. Load the merchant's store.
         const storeResponse = await fetch(`${API_URL}/api/stores/mine`, {
           credentials: "include",
           signal: controller.signal,
@@ -78,6 +78,16 @@ function Dashboard() {
 
         const storeData = await storeResponse.json();
 
+        // A merchant without a store can still use the dashboard
+        // to start the store setup process.
+        if (storeResponse.status === 404) {
+          if (!controller.signal.aborted) {
+            setStore(null);
+            setAnalytics(null);
+          }
+          return;
+        }
+
         if (!storeResponse.ok) {
           throw new Error(
             storeData.message || "Failed to load store details."
@@ -89,6 +99,7 @@ function Dashboard() {
         const currentStore = storeData.store || storeData;
         setStore(currentStore);
 
+        // 3. Load analytics only after the store has been loaded.
         const analyticsResponse = await fetch(
           `${API_URL}/api/merchant/analytics`,
           {
@@ -199,65 +210,83 @@ function Dashboard() {
             <h2>
               Welcome{user?.name ? `, ${user.name}` : ""}!
             </h2>
-            <p>Here is an overview of your store's performance.</p>
+            <p>
+              {store
+                ? "Here is an overview of your store's performance."
+                : "Your account is ready. Create your store to get started."}
+            </p>
           </div>
         </section>
 
-        {analytics && (
-          <section className="analytics-section">
-            <h2>Store overview</h2>
-
-            <div className="analytics-grid">
-              <article className="analytics-card">
-                <span>Total orders</span>
-                <strong>{analytics.totalOrders ?? 0}</strong>
-              </article>
-
-              <article className="analytics-card">
-                <span>Pending orders</span>
-                <strong>{analytics.pendingOrders ?? 0}</strong>
-              </article>
-
-              <article className="analytics-card">
-                <span>Delivered orders</span>
-                <strong>{analytics.deliveredOrders ?? 0}</strong>
-              </article>
-
-              <article className="analytics-card">
-                <span>Delivered revenue</span>
-                <strong>
-                  {formatCurrency(analytics.totalRevenue)}
-                </strong>
-              </article>
-            </div>
+        {!store ? (
+          <section className="dashboard-card">
+            <h2>Create your first store</h2>
+            <p>
+              Set up your store name and details before adding products
+              and managing customer orders.
+            </p>
+            <Link
+              to="/store-setup"
+              className="dashboard-action-link"
+            >
+              Create Your Store →
+            </Link>
           </section>
-        )}
+        ) : (
+          <>
+            {analytics && (
+              <section className="analytics-section">
+                <h2>Store overview</h2>
 
-        <section className="dashboard-grid">
-          <div className="dashboard-card">
-            <h2>Account details</h2>
+                <div className="analytics-grid">
+                  <article className="analytics-card">
+                    <span>Total orders</span>
+                    <strong>{analytics.totalOrders ?? 0}</strong>
+                  </article>
 
-            <div className="dashboard-detail">
-              <span>Name</span>
-              <strong>{user?.name || "Not available"}</strong>
-            </div>
+                  <article className="analytics-card">
+                    <span>Pending orders</span>
+                    <strong>{analytics.pendingOrders ?? 0}</strong>
+                  </article>
 
-            <div className="dashboard-detail">
-              <span>Email</span>
-              <strong>{user?.email || "Not available"}</strong>
-            </div>
+                  <article className="analytics-card">
+                    <span>Delivered orders</span>
+                    <strong>{analytics.deliveredOrders ?? 0}</strong>
+                  </article>
 
-            <div className="dashboard-detail">
-              <span>Role</span>
-              <strong>{user?.role || "merchant"}</strong>
-            </div>
-          </div>
+                  <article className="analytics-card">
+                    <span>Delivered revenue</span>
+                    <strong>
+                      {formatCurrency(analytics.totalRevenue)}
+                    </strong>
+                  </article>
+                </div>
+              </section>
+            )}
 
-          <div className="dashboard-card">
-            <h2>Your store</h2>
+            <section className="dashboard-grid">
+              <div className="dashboard-card">
+                <h2>Account details</h2>
 
-            {store ? (
-              <>
+                <div className="dashboard-detail">
+                  <span>Name</span>
+                  <strong>{user?.name || "Not available"}</strong>
+                </div>
+
+                <div className="dashboard-detail">
+                  <span>Email</span>
+                  <strong>{user?.email || "Not available"}</strong>
+                </div>
+
+                <div className="dashboard-detail">
+                  <span>Role</span>
+                  <strong>{user?.role || "merchant"}</strong>
+                </div>
+              </div>
+
+              <div className="dashboard-card">
+                <h2>Your store</h2>
+
                 <div className="dashboard-detail">
                   <span>Store name</span>
                   <strong>{store.name || "Unnamed store"}</strong>
@@ -280,103 +309,105 @@ function Dashboard() {
                     View Public Store →
                   </Link>
                 )}
-              </>
-            ) : (
-              <Link to="/store-setup" className="dashboard-action-link">
-                Create Your Store →
-              </Link>
-            )}
-          </div>
-
-          <div className="dashboard-card">
-            <h2>Product management</h2>
-            <p>Manage product details, prices, and available stock.</p>
-            <Link to="/products" className="dashboard-action-link">
-              Manage Products →
-            </Link>
-          </div>
-
-          <div className="dashboard-card">
-            <h2>Order management</h2>
-            <p>Review purchases and update order statuses.</p>
-            <Link to="/orders" className="dashboard-action-link">
-              Manage Orders →
-            </Link>
-          </div>
-        </section>
-
-        <section className="analytics-details-grid">
-          <div className="dashboard-card">
-            <div className="analytics-section-header">
-              <h2>Recent orders</h2>
-              <Link to="/orders">View all</Link>
-            </div>
-
-            {recentOrders.length === 0 ? (
-              <p>No orders yet.</p>
-            ) : (
-              <div className="analytics-table-wrapper">
-                <table className="analytics-table">
-                  <thead>
-                    <tr>
-                      <th>Order</th>
-                      <th>Date</th>
-                      <th>Status</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentOrders.map((order) => (
-                      <tr key={order._id}>
-                        <td>{order.orderNumber || "Order"}</td>
-                        <td>{formatDate(order.createdAt)}</td>
-                        <td>
-                          <span
-                            className={`order-status-badge status-${order.status}`}
-                          >
-                            {order.status}
-                          </span>
-                        </td>
-                        <td>{formatCurrency(order.subtotal)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
-            )}
-          </div>
 
-          <div className="dashboard-card">
-            <div className="analytics-section-header">
-              <h2>Low-stock alerts</h2>
-              <Link to="/products">Manage products</Link>
-            </div>
+              <div className="dashboard-card">
+                <h2>Product management</h2>
+                <p>Manage product details, prices, and available stock.</p>
+                <Link
+                  to="/products"
+                  className="dashboard-action-link"
+                >
+                  Manage Products →
+                </Link>
+              </div>
 
-            {lowStockProducts.length === 0 ? (
-              <p>No low-stock products. Your inventory looks good.</p>
-            ) : (
-              <div className="low-stock-list">
-                {lowStockProducts.map((product) => (
-                  <div
-                    className="low-stock-item"
-                    key={product._id}
-                  >
-                    <div>
-                      <strong>{product.name}</strong>
-                      <span>
-                        {formatCurrency(product.price)}
-                      </span>
-                    </div>
+              <div className="dashboard-card">
+                <h2>Order management</h2>
+                <p>Review purchases and update order statuses.</p>
+                <Link
+                  to="/orders"
+                  className="dashboard-action-link"
+                >
+                  Manage Orders →
+                </Link>
+              </div>
+            </section>
 
-                    <span className="low-stock-quantity">
-                      {product.stock} left
-                    </span>
+            <section className="analytics-details-grid">
+              <div className="dashboard-card">
+                <div className="analytics-section-header">
+                  <h2>Recent orders</h2>
+                  <Link to="/orders">View all</Link>
+                </div>
+
+                {recentOrders.length === 0 ? (
+                  <p>No orders yet.</p>
+                ) : (
+                  <div className="analytics-table-wrapper">
+                    <table className="analytics-table">
+                      <thead>
+                        <tr>
+                          <th>Order</th>
+                          <th>Date</th>
+                          <th>Status</th>
+                          <th>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recentOrders.map((order) => (
+                          <tr key={order._id}>
+                            <td>{order.orderNumber || "Order"}</td>
+                            <td>{formatDate(order.createdAt)}</td>
+                            <td>
+                              <span
+                                className={`order-status-badge status-${order.status}`}
+                              >
+                                {order.status}
+                              </span>
+                            </td>
+                            <td>{formatCurrency(order.subtotal)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
-        </section>
+
+              <div className="dashboard-card">
+                <div className="analytics-section-header">
+                  <h2>Low-stock alerts</h2>
+                  <Link to="/products">Manage products</Link>
+                </div>
+
+                {lowStockProducts.length === 0 ? (
+                  <p>
+                    No low-stock products. Your inventory looks good.
+                  </p>
+                ) : (
+                  <div className="low-stock-list">
+                    {lowStockProducts.map((product) => (
+                      <div
+                        className="low-stock-item"
+                        key={product._id}
+                      >
+                        <div>
+                          <strong>{product.name}</strong>
+                          <span>{formatCurrency(product.price)}</span>
+                        </div>
+
+                        <span className="low-stock-quantity">
+                          {product.stock} left
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+          </>
+        )}
       </div>
     </main>
   );
