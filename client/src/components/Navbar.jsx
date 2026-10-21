@@ -1,31 +1,26 @@
+import { Link } from "react-router-dom";
 
 function Navbar() {
   return (
     <nav className="navbar">
-      <a href="#" className="brand">
+      <Link to="/" className="brand">
         <span className="brand-icon">S</span>
         StoreForge<span className="brand-dot">.</span>
-      </a>
+      </Link>
 
       <div className="nav-links">
-        <a href="#features">Features</a>
-        <a href="#how-it-works">How it works</a>
+        <a href="/#features">Features</a>
+        <a href="/#how-it-works">How it works</a>
       </div>
 
       <div className="nav-actions">
-        <button
-          className="login-btn"
-          onClick={() => alert("Login coming soon!")}
-        >
+        <Link to="/login" className="login-btn">
           Log in
-        </button>
+        </Link>
 
-        <button
-          className="primary-btn nav-cta"
-          onClick={() => alert("Store registration coming soon!")}
-        >
+        <Link to="/register" className="primary-btn nav-cta">
           Start selling ↗
-        </button>
+        </Link>
       </div>
     </nav>
   );

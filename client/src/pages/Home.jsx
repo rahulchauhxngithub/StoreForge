@@ -1,5 +1,5 @@
-
 import "../App.css";
+import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
 const features = [
@@ -26,9 +26,7 @@ const features = [
 function App() {
   return (
     <div className="app">
-      <Navbar/>
-
-        
+      <Navbar />
 
       <main>
         <section className="hero">
@@ -50,12 +48,10 @@ function App() {
             </p>
 
             <div className="hero-actions">
-              <button
-                className="primary-btn hero-cta"
-                onClick={() => alert("Store registration coming soon!")}
-              >
+              <Link className="primary-btn hero-cta" to="/register">
                 Create your store <span>→</span>
-              </button>
+              </Link>
+
               <a className="secondary-btn" href="#features">
                 Explore features ↓
               </a>
@@ -82,7 +78,11 @@ function App() {
 
               <div className="store-banner">
                 <span>THE EVERYDAY COLLECTION</span>
-                <h2>Made for<br />your kind of life.</h2>
+                <h2>
+                  Made for
+                  <br />
+                  your kind of life.
+                </h2>
                 <span className="banner-link">DISCOVER MORE ↗</span>
               </div>
 
@@ -99,6 +99,7 @@ function App() {
                   <strong>Everyday Tote</strong>
                   <span>₹899</span>
                 </div>
+
                 <div className="product">
                   <div className="product-image product-two">
                     <span>02</span>
@@ -106,6 +107,7 @@ function App() {
                   <strong>Essential Bottle</strong>
                   <span>₹649</span>
                 </div>
+
                 <div className="product">
                   <div className="product-image product-three">
                     <span>03</span>
@@ -135,7 +137,9 @@ function App() {
         <section className="features-section" id="features">
           <div className="section-heading">
             <span className="section-label">EVERYTHING IN ONE PLACE</span>
-            <h2>Less complexity. <span>More possibility.</span></h2>
+            <h2>
+              Less complexity. <span>More possibility.</span>
+            </h2>
             <p>
               Everything you need to take your business from an idea
               to an online store.
@@ -160,20 +164,18 @@ function App() {
             <h2>Ready to build something of your own?</h2>
             <p>We're building the tools to help your store grow.</p>
           </div>
-          <button
-            className="primary-btn"
-            onClick={() => alert("Merchant onboarding coming soon!")}
-          >
+
+          <Link className="primary-btn" to="/register">
             Get started <span>→</span>
-          </button>
+          </Link>
         </section>
       </main>
 
       <footer className="footer">
-        <a href="#" className="brand">
+        <Link to="/" className="brand">
           <span className="brand-icon">S</span>
           StoreForge<span className="brand-dot">.</span>
-        </a>
+        </Link>
         <span>Built for the next generation of merchants.</span>
         <span>© 2026 StoreForge</span>
       </footer>
