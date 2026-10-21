@@ -1,26 +1,30 @@
-
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-// Store the JWT in an HttpOnly cookie.
-function setAuthCookie(res, token) {
-  res.cookie("storeforge_token", token, {
+// Configure the authentication cookie for production and local development.
+function getAuthCookieOptions() {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     maxAge: 60 * 60 * 1000,
     path: "/",
-  });
+  };
 }
 
-// Clear the authentication cookie.
+// Store the JWT in an HttpOnly cookie.
+function setAuthCookie(res, token) {
+  res.cookie("storeforge_token", token, getAuthCookieOptions());
+}
+
+// Clear the authentication cookie using matching options.
 function clearAuthCookie(res) {
   res.clearCookie("storeforge_token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
+    ...getAuthCookieOptions(),
+    maxAge: undefined,
   });
 }
 
@@ -29,7 +33,6 @@ export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // 1. Validate required fields.
     if (
       typeof name !== "string" ||
       typeof email !== "string" ||
@@ -70,7 +73,6 @@ export const register = async (req, res) => {
       });
     }
 
-    // 2. Check whether the account already exists.
     const existingUser = await User.findOne({
       email: cleanEmail,
     });
@@ -82,10 +84,8 @@ export const register = async (req, res) => {
       });
     }
 
-    // 3. Hash the password before saving it.
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // 4. Create the merchant account.
     const user = await User.create({
       name: cleanName,
       email: cleanEmail,
@@ -93,7 +93,6 @@ export const register = async (req, res) => {
       role: "merchant",
     });
 
-    // 5. Create a signed JWT.
     if (!process.env.JWT_SECRET) {
       throw new Error("JWT_SECRET is not configured");
     }
@@ -110,10 +109,8 @@ export const register = async (req, res) => {
       }
     );
 
-    // 6. Set the token as an HttpOnly cookie.
     setAuthCookie(res, token);
 
-    // 7. Return user details without the token or password.
     return res.status(201).json({
       success: true,
       message: "Merchant account created successfully.",
@@ -146,7 +143,6 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Validate required fields.
     if (
       typeof email !== "string" ||
       typeof password !== "string" ||
@@ -161,7 +157,6 @@ export const login = async (req, res) => {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    // 2. Retrieve the user and include the password hash.
     const user = await User.findOne({
       email: cleanEmail,
     }).select("+password");
@@ -173,7 +168,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // 3. Compare the submitted password with the stored hash.
     const isPasswordValid = await bcrypt.compare(
       password,
       user.password
@@ -186,7 +180,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // 4. Create a signed JWT.
     if (!process.env.JWT_SECRET) {
       throw new Error("JWT_SECRET is not configured");
     }
@@ -203,10 +196,8 @@ export const login = async (req, res) => {
       }
     );
 
-    // 5. Set the token as an HttpOnly cookie.
     setAuthCookie(res, token);
 
-    // 6. Return user details without the token or password.
     return res.status(200).json({
       success: true,
       message: "Login successful.",
