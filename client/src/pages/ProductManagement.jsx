@@ -1,8 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const API_URL = "http://localhost:5000/api";
+import API_URL from "../api";
 
 const emptyForm = {
   name: "",
@@ -23,12 +22,11 @@ function ProductManagement() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  
   async function loadProducts() {
     setError("");
 
     try {
-      const response = await fetch(`${API_URL}/products/mine`, {
+      const response = await fetch(`${API_URL}/api/products/mine`, {
         credentials: "include",
       });
 
@@ -56,7 +54,7 @@ function ProductManagement() {
 
     async function fetchInitialProducts() {
       try {
-        const response = await fetch(`${API_URL}/products/mine`, {
+        const response = await fetch(`${API_URL}/api/products/mine`, {
           credentials: "include",
         });
 
@@ -92,7 +90,6 @@ function ProductManagement() {
     };
   }, [navigate]);
 
-
   function handleChange(event) {
     const { name, value } = event.target;
 
@@ -126,8 +123,8 @@ function ProductManagement() {
 
       const response = await fetch(
         isEditing
-          ? `${API_URL}/products/${editingId}`
-          : `${API_URL}/products`,
+          ? `${API_URL}/api/products/${editingId}`
+          : `${API_URL}/api/products`,
         {
           method: isEditing ? "PATCH" : "POST",
           credentials: "include",
@@ -191,7 +188,7 @@ function ProductManagement() {
 
     try {
       const response = await fetch(
-        `${API_URL}/products/${product._id}`,
+        `${API_URL}/api/products/${product._id}`,
         {
           method: "DELETE",
           credentials: "include",

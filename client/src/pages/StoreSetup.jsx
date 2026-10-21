@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API_URL from "../api";
 import "../App.css";
 
 function StoreSetup() {
@@ -19,7 +20,7 @@ function StoreSetup() {
     async function checkExistingStore() {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/stores/mine",
+          `${API_URL}/api/stores/mine`,
           { credentials: "include" }
         );
 
@@ -66,7 +67,7 @@ function StoreSetup() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/stores",
+        `${API_URL}/api/stores`,
         {
           method: "POST",
           credentials: "include",

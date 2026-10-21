@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-const API_URL = "http://localhost:5000";
+import API_URL from "../api";
 
 const STATUS_OPTIONS = {
   pending: ["confirmed", "cancelled"],

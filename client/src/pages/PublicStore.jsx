@@ -1,8 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-
-const API_URL = "http://localhost:5000/api";
+import API_URL from "../api";
 
 function PublicStore() {
   const { slug } = useParams();
@@ -49,7 +48,7 @@ function PublicStore() {
 
       try {
         const response = await fetch(
-          `${API_URL}/stores/public/${encodeURIComponent(slug)}`,
+          `${API_URL}/api/stores/public/${encodeURIComponent(slug)}`,
           { signal: controller.signal }
         );
 
@@ -188,7 +187,7 @@ function PublicStore() {
 
     try {
       const response = await fetch(
-        `${API_URL}/orders/${encodeURIComponent(slug)}/checkout`,
+        `${API_URL}/api/orders/${encodeURIComponent(slug)}/checkout`,
         {
           method: "POST",
           headers: {
